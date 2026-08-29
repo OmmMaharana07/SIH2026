@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SatQuery AI — Interactive Remote Sensing Vision-Language Assistant | SIH 2026</title>
+  <meta name="description" content="Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis through Natural Language Text Queries — Smart India Hackathon 2026 Prototype" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- ─── HEADER ─────────────────────────────────────────────── -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🛰️</div>
+        <div class="logo-text">
+          <span class="logo-name">SatQuery <span class="logo-accent">AI</span></span>
+          <span class="logo-sub">Multimodal Remote Sensing VLM Assistant</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-tab="analyze" id="tab-analyze" role="tab" aria-selected="true">
+          <span class="tab-icon">🔍</span> VQA & Spectral
+        </button>
+        <button class="nav-tab" data-tab="change" id="tab-change" role="tab" aria-selected="false">
+          <span class="tab-icon">🔄</span> Change Detection
+        </button>
+        <button class="nav-tab" data-tab="sar" id="tab-sar" role="tab" aria-selected="false">
+          <span class="tab-icon">🛰️</span> Optical + SAR
+        </button>
+        <button class="nav-tab" data-tab="gallery" id="tab-gallery" role="tab" aria-selected="false">
+          <span class="tab-icon">🗂️</span> Dataset Gallery
+        </button>
+        <button class="nav-tab" data-tab="trace" id="tab-trace" role="tab" aria-selected="false">
+          <span class="tab-icon">🧠</span> Agent Trace
+        </button>
+        <button class="nav-tab" data-tab="about" id="tab-about" role="tab" aria-selected="false">
+          <span class="tab-icon">ℹ️</span> Architecture
+        </button>
+      </nav>
+
+      <div class="header-right">
+        <div class="header-badge">
+          <span class="badge-dot"></span> SIH 2026 • ISRO
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── HERO BANNER ──────────────────────────────────────────── -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-orb orb-1"></div>
+      <div class="hero-orb orb-2"></div>
+      <div class="hero-orb orb-3"></div>
+      <div class="hero-grid"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>🏆</span> Smart India Hackathon 2026 — Space Technology &amp; Geo-Informatics
+      </div>
+      <h1 class="hero-title">
+        Interactive Vision-Language Assistant<br/>
+        <span class="hero-gradient">for Multimodal Remote Sensing</span>
+      </h1>
+      <p class="hero-desc">
+        Query satellite imagery using natural language. Extract multispectral NDVI/NDWI indices,<br/>
+        visually ground terrain features, track bi-temporal changes, and fuse Optical with SAR radar.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-value" id="stat-images">5,631+</span>
+          <span class="stat-label">Satellite Imagery Benchmark</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-value">4</span>
+          <span class="stat-label">Terrain Classes &amp; Spectral Overlays</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-value">Optical + SAR</span>
+          <span class="stat-label">Cross-Modal Sensors</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-value">&lt;50ms</span>
+          <span class="stat-label">Edge Inference Latency</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MAIN APP CONTAINER ───────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- ══════════════════ TAB 1: ANALYZE & VQA ═══════════════════ -->
+    <section class="tab-panel active" id="panel-analyze" role="tabpanel">
+      <div class="analyze-layout">
+
+        <!-- LEFT PANEL: Image Viewport + Spectral Layer Toolbar + Results -->
+        <div class="left-panel">
+
+          <!-- Upload & Viewer Card -->
+          <div class="card upload-card" id="upload-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>📡</span> Imagery Input &amp; Spectral Viewer</h2>
+              <div class="header-actions">
+                <button class="btn-secondary btn-sm" id="btn-sample">🎲 Try Sample</button>
+              </div>
+            </div>
+
+            <!-- Interactive Multi-layer Viewport -->
+            <div class="viewer-container" id="viewer-container">
+              <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload satellite image">
+                <div class="drop-zone-inner" id="drop-inner">
+                  <div class="drop-icon">🛰️</div>
+                  <div class="drop-title">Drop Satellite Image Here</div>
+                  <div class="drop-sub">or click to browse filesystem</div>
+                  <div class="drop-hint">Supports GeoTIFF, PNG, JPG • Optical &amp; Multispectral</div>
+                </div>
+
+                <!-- Layer canvases / images -->
+                <div class="image-layers-wrap hidden" id="layers-wrap">
+                  <img id="preview-img" class="preview-img" alt="Optical RGB Base" />
+                  <img id="overlay-img" class="overlay-img hidden" alt="Spectral Overlay Layer" />
+                  <!-- SVG bounding boxes container -->
+                  <svg id="grounding-svg" class="grounding-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                </div>
+              </div>
+
+              <!-- Layer Switching Toolbar (Visible when image is loaded) -->
+              <div class="layer-toolbar hidden" id="layer-toolbar">
+                <span class="layer-title">Layer:</span>
+                <button class="btn-layer active" data-layer="rgb">RGB True Color</button>
+                <button class="btn-layer" data-layer="ndvi">🌿 NDVI Heatmap</button>
+                <button class="btn-layer" data-layer="ndwi">💧 NDWI Water</button>
+                <button class="btn-layer" data-layer="cir">🔴 False Color (CIR)</button>
+                <button class="btn-layer" data-layer="edges">⚡ Structural Edges</button>
+                <div class="layer-divider"></div>
+                <label class="toggle-switch" title="Toggle Visual Grounding Bounding Boxes">
+                  <input type="checkbox" id="toggle-boxes" checked />
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">🎯 Grounding</span>
+                </label>
+              </div>
+            </div>
+
+            <input type="file" id="file-input" accept="image/*" class="hidden" />
+            <div id="upload-status" class="upload-status hidden"></div>
+          </div>
+
+          <!-- Classification & Spectral Profile Card -->
+          <div class="card result-card hidden" id="result-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>🎯</span> Spectral Classification Profile</h2>
+              <div class="header-actions">
+                <span class="result-badge" id="result-badge"></span>
+                <button class="btn-secondary btn-sm" id="btn-export-report" title="Export Full Intelligence Report">📄 Export Report</button>
+              </div>
+            </div>
+
+            <div class="result-main" id="result-main">
+              <div class="result-emoji" id="result-emoji"></div>
+              <div class="result-info">
+                <div class="result-label" id="result-label"></div>
+                <div class="result-conf">
+                  <span id="result-conf-text">Confidence: 0%</span>
+                  <div class="conf-bar">
+                    <div class="conf-fill" id="conf-fill"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ranked Class Scores -->
+            <div class="scores-grid" id="scores-grid"></div>
+
+            <!-- Extracted Spectral Biomarkers -->
+            <div class="features-list" id="features-list"></div>
+
+            <!-- Structured Scene Caption -->
+            <div class="caption-card">
+              <div class="caption-header">
+                <span>📝</span> <strong>Structured Scene Caption</strong>
+              </div>
+              <div class="result-caption" id="result-caption"></div>
+            </div>
+
+            <!-- Spectral Statistics Collapsible -->
+            <details class="stats-details" open>
+              <summary>📊 Radiometric &amp; Index Telemetry</summary>
+              <div class="stats-grid" id="stats-grid"></div>
+            </details>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: Conversational Vision-Language Assistant -->
+        <div class="right-panel">
+          <div class="card chat-card" id="chat-card">
+            <div class="card-header">
+              <div class="chat-header-title">
+                <h2 class="card-title"><span>💬</span> SatQuery VLM Chat</h2>
+                <div class="chat-status" id="chat-status">
+                  <span class="status-dot" id="status-dot"></span>
+                  <span id="status-text">Upload an image to start</span>
+                </div>
+              </div>
+              <div class="chat-actions">
+                <button class="btn-icon" id="btn-clear-chat" title="Clear Conversation">🗑️</button>
+              </div>
+            </div>
+
+            <!-- Chat Messages Window -->
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-welcome">
+                <div class="welcome-icon">🌍</div>
+                <div class="welcome-title">Ready for Remote Sensing Analysis</div>
+                <div class="welcome-desc">
+                  Upload any satellite scene or select a sample from our benchmark dataset.<br/>
+                  Ask free-form questions regarding land-use, vegetation health, flood risk, or spatial features.
+                </div>
+                <div class="suggestion-chips" id="suggestions">
+                  <button class="chip" data-q="Generate a full scene caption and summary.">📝 Generate Full Caption</button>
+                  <button class="chip" data-q="What is the vegetation index (NDVI) and canopy health?">🌿 Vegetation Index (NDVI)</button>
+                  <button class="chip" data-q="Is there any surface water body or flood inundation?">💧 Detect Water Body</button>
+                  <button class="chip" data-q="Where are the primary terrain features located?">🎯 Visual Grounding Regions</button>
+                  <button class="chip" data-q="Is this area suitable for agriculture or development?">🌾 Agricultural Suitability</button>
+                  <button class="chip" data-q="What satellite sensor and resolution matches this scene?">🛰️ Sensor Specifications</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input Controls -->
+            <div class="chat-input-wrap" id="chat-input-wrap">
+              <textarea
+                id="chat-input"
+                class="chat-input"
+                placeholder="Ask about this satellite scene (or click suggestions above)..."
+                rows="1"
+                disabled
+              ></textarea>
+              <button class="btn-voice" id="btn-voice" disabled title="Speak query (Voice Input)">
+                🎤
+              </button>
+              <button class="btn-send" id="btn-send" disabled aria-label="Send Query">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAB 2: BI-TEMPORAL CHANGE DETECTION ═════ -->
+    <section class="tab-panel hidden" id="panel-change" role="tabpanel">
+      <div class="change-layout">
+        <div class="panel-intro">
+          <h2>🔄 Bi-Temporal Change Detection &amp; Environmental Dynamics</h2>
+          <p>Compare two temporally co-registered satellite observations to detect deforestation, water body expansion/recession, urbanization, or disaster impacts.</p>
+        </div>
+
+        <div class="change-grid">
+          <!-- T1 Observation (Before) -->
+          <div class="card change-card" id="change-card-t1">
+            <div class="card-header">
+              <h3 class="card-title">📅 Observation T1 (Initial Baseline)</h3>
+              <button class="btn-secondary btn-sm" id="btn-sample-t1">Sample T1</button>
+            </div>
+            <div class="change-drop-zone" id="drop-t1">
+              <div class="drop-zone-inner" id="drop-t1-inner">
+                <div class="drop-icon">⏮️</div>
+                <div class="drop-title">Drop Baseline Image (T1)</div>
+              </div>
+              <img id="preview-t1" class="preview-img hidden" alt="Observation T1" />
+            </div>
+            <input type="file" id="file-t1" accept="image/*" class="hidden" />
+            <div class="change-status" id="status-t1">No image loaded</div>
+          </div>
+
+          <!-- T2 Observation (After) -->
+          <div class="card change-card" id="change-card-t2">
+            <div class="card-header">
+              <h3 class="card-title">📅 Observation T2 (Subsequent Observation)</h3>
+              <button class="btn-secondary btn-sm" id="btn-sample-t2">Sample T2</button>
+            </div>
+            <div class="change-drop-zone" id="drop-t2">
+              <div class="drop-zone-inner" id="drop-t2-inner">
+                <div class="drop-icon">⏭️</div>
+                <div class="drop-title">Drop Target Image (T2)</div>
+              </div>
+              <img id="preview-t2" class="preview-img hidden" alt="Observation T2" />
+            </div>
+            <input type="file" id="file-t2" accept="image/*" class="hidden" />
+            <div class="change-status" id="status-t2">No image loaded</div>
+          </div>
+        </div>
+
+        <div class="change-control-bar">
+          <button class="btn-primary btn-lg" id="btn-run-change" disabled>
+            ⚡ Run Bi-Temporal Change Detection
+          </button>
+          <button class="btn-secondary" id="btn-preset-change-1">Preset: Forest to Arid (Deforestation)</button>
+          <button class="btn-secondary" id="btn-preset-change-2">Preset: Drought / Water Recession</button>
+        </div>
+
+        <!-- Change Detection Output Container -->
+        <div class="change-results hidden" id="change-results">
+          <div class="change-results-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">🗺️ Difference Heatmap &amp; Alteration Map</h3>
+                <span class="badge-accent" id="change-pct-badge">0% Changed</span>
+              </div>
+              <div class="heatmap-viewer">
+                <img id="change-heatmap-img" class="heatmap-img" alt="Change Heatmap" />
+                <div class="heatmap-legend">
+                  <span class="legend-item"><span class="legend-box red"></span> Canopy/Water Loss</span>
+                  <span class="legend-item"><span class="legend-box green"></span> Vegetation Gain</span>
+                  <span class="legend-item"><span class="legend-box blue"></span> Water Inundation</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">📊 Quantified Dynamic Metrics</h3>
+              </div>
+              <div class="change-metrics-grid" id="change-metrics-grid"></div>
+              <div class="change-synthesis" id="change-synthesis"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAB 3: OPTICAL + SAR FUSION ═════════════ -->
+    <section class="tab-panel hidden" id="panel-sar" role="tabpanel">
+      <div class="sar-layout">
+        <div class="panel-intro">
+          <h2>🛰️ Optical + SAR (Synthetic Aperture Radar) Cross-Modal Fusion</h2>
+          <p>Jointly analyze multispectral Optical reflectance with microwave SAR backscatter. Overcome cloud occlusion, estimate dielectric moisture, and analyze structural surface roughness.</p>
+        </div>
+
+        <div class="sar-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📡 Optical RGB Input</h3>
+              <button class="btn-secondary btn-sm" id="btn-sample-cloudy">Load Cloudy Scene</button>
+            </div>
+            <div class="sar-drop-zone" id="drop-sar-opt">
+              <div class="drop-zone-inner" id="drop-sar-inner">
+                <div class="drop-icon">☁️</div>
+                <div class="drop-title">Drop Optical / Cloudy Scene</div>
+              </div>
+              <img id="preview-sar-opt" class="preview-img hidden" alt="Optical Image" />
+            </div>
+            <input type="file" id="file-sar-opt" accept="image/*" class="hidden" />
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">⚡ Synthetic Aperture Radar (SAR σ°)</h3>
+              <span class="badge-accent">Microwave Penetration</span>
+            </div>
+            <div class="sar-preview-box">
+              <img id="preview-sar-radar" class="preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256' fill='%231a202c'%3E%3Crect width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' fill='%23718096' dominant-baseline='middle' text-anchor='middle'%3ERadar View Pending%3C/text%3E%3C/svg%3E" alt="SAR Backscatter" />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">✨ Fused Cross-Modal Composite</h3>
+              <span class="badge-success">Multi-Sensor Matrix</span>
+            </div>
+            <div class="sar-preview-box">
+              <img id="preview-sar-fused" class="preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256' fill='%231a202c'%3E%3Crect width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' fill='%23718096' dominant-baseline='middle' text-anchor='middle'%3EFused View Pending%3C/text%3E%3C/svg%3E" alt="Fused Output" />
+            </div>
+          </div>
+        </div>
+
+        <div class="sar-actions">
+          <button class="btn-primary btn-lg" id="btn-run-sar">
+            🚀 Execute Optical-SAR Joint Synthesis
+          </button>
+        </div>
+
+        <div class="card sar-report-card hidden" id="sar-report-card">
+          <div class="card-header">
+            <h3 class="card-title">📋 Cross-Sensor Fusion Intelligence Report</h3>
+          </div>
+          <div class="sar-report-content" id="sar-report-content"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAB 4: DATASET GALLERY ══════════════════ -->
+    <section class="tab-panel hidden" id="panel-gallery" role="tabpanel">
+      <div class="gallery-header">
+        <h2 class="section-title">🗂️ Multispectral Remote Sensing Benchmark Gallery</h2>
+        <p class="section-sub">Browse and instantly analyze thousands of curated satellite observations across diverse biomes</p>
+      </div>
+
+      <div class="category-tabs" id="cat-tabs">
+        <button class="cat-tab active" data-cat="cloudy">🌧️ Cloudy (1,500)</button>
+        <button class="cat-tab" data-cat="desert">🏜️ Desert (1,131)</button>
+        <button class="cat-tab" data-cat="green_area">🌿 Green Area (1,500)</button>
+        <button class="cat-tab" data-cat="water">💧 Water (1,500)</button>
+      </div>
+
+      <div class="cat-info-bar" id="cat-info-bar"></div>
+
+      <div class="gallery-grid" id="gallery-grid">
+        <div class="gallery-loading">Loading benchmark dataset…</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAB 5: AGENTIC EXECUTION TRACE ══════════ -->
+    <section class="tab-panel hidden" id="panel-trace" role="tabpanel">
+      <div class="trace-layout">
+        <div class="panel-intro">
+          <h2>🧠 Observable Agentic Workflow &amp; Execution Audit</h2>
+          <p>Inspect the multi-stage reasoning pipeline, specialist tool invocations, execution latencies, and sensor parameter validation in real-time.</p>
+        </div>
+
+        <div class="trace-architecture-card card">
+          <div class="card-header">
+            <h3 class="card-title">⛓️ Multi-Stage Agentic Reasoning Graph</h3>
+          </div>
+          <div class="pipeline-graph">
+            <div class="pipeline-node active">
+              <div class="node-icon">📥</div>
+              <div class="node-title">1. Input Ingestion</div>
+              <div class="node-sub">Optical / SAR / Pairs</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-node active">
+              <div class="node-icon">🧭</div>
+              <div class="node-title">2. Intent Router</div>
+              <div class="node-sub">VQA / Change / Grounding</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-node active">
+              <div class="node-icon">📊</div>
+              <div class="node-title">3. Spectral Engine</div>
+              <div class="node-sub">NDVI / NDWI / CIR</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-node active">
+              <div class="node-icon">🎯</div>
+              <div class="node-title">4. Grounding Box</div>
+              <div class="node-sub">Spatial Bounding</div>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-node active">
+              <div class="node-icon">🤖</div>
+              <div class="node-title">5. Grounded VLM</div>
+              <div class="node-sub">Grounded Text Synthesis</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card trace-log-card">
+          <div class="card-header">
+            <h3 class="card-title">📜 Live Execution Trace Log</h3>
+            <span class="badge-accent" id="trace-status-badge">System Ready</span>
+          </div>
+          <div class="trace-log-list" id="trace-log-list">
+            <div class="trace-empty">Run any analysis or question to inspect tool invocation traces.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAB 6: ARCHITECTURE & ABOUT ═════════════ -->
+    <section class="tab-panel hidden" id="panel-about" role="tabpanel">
+      <div class="about-container">
+        <div class="about-hero">
+          <div class="about-icon">🛰️</div>
+          <h2>SatQuery AI</h2>
+          <p>Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis</p>
+          <div class="about-tags">
+            <span class="tag">Smart India Hackathon 2026</span>
+            <span class="tag">ISRO / Department of Space</span>
+            <span class="tag">Computer Vision</span>
+            <span class="tag">Multimodal VLM</span>
+            <span class="tag">Remote Sensing</span>
+          </div>
+        </div>
+
+        <div class="about-cards">
+          <div class="about-card">
+            <div class="ac-icon">🎯</div>
+            <h3>Problem Statement</h3>
+            <p>Develop an interactive AI assistant that allows non-expert users and analysts to query high-volume satellite imagery through conversational natural language, extracting accurate, grounded geospatial insights without complex GIS tool friction.</p>
+          </div>
+          <div class="about-card">
+            <div class="ac-icon">⚙️</div>
+            <h3>Multimodal Architecture</h3>
+            <p>Integrates 5 specialized perception &amp; reasoning layers: Presentation Layer, Agentic Query Router, Multispectral Perception Engine (NDVI, NDWI, CIR), Visual Grounding Bounding Box Localizer, and Grounded Vision-Language Synthesis.</p>
+          </div>
+          <div class="about-card">
+            <div class="ac-icon">🔄</div>
+            <h3>Bi-Temporal &amp; SAR Intelligence</h3>
+            <p>Features bi-temporal pixel differential tracking to quantify environmental changes over time, as well as Synthetic Aperture Radar (SAR) cross-modal fusion to penetrate cloud cover and map structural roughness.</p>
+          </div>
+          <div class="about-card">
+            <div class="ac-icon">🌍</div>
+            <h3>Dataset &amp; Spectral Standards</h3>
+            <p>Calibrated against benchmark satellite datasets across 4 core biomes (Cloudy, Desert, Green Forests, Water Bodies) with mathematical parity to Sentinel-2 MSI and Landsat-9 radiometric channels.</p>
+          </div>
+        </div>
+
+        <div class="tech-stack">
+          <h3>Technology Stack &amp; Design Principles</h3>
+          <div class="tech-grid">
+            <div class="tech-item"><span>🐍</span> Python Flask REST API</div>
+            <div class="tech-item"><span>🖼️</span> Pillow + NumPy Spectral Pipeline</div>
+            <div class="tech-item"><span>✨</span> Vanilla CSS3 Design System</div>
+            <div class="tech-item"><span>⚡</span> Modern ES6+ Web Framework</div>
+            <div class="tech-item"><span>🤖</span> Gemini 1.5 Vision / Rule Engine</div>
+            <div class="tech-item"><span>🎤</span> Web Speech Audio Synthesis</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── TOAST NOTIFICATION ──────────────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ─── SAMPLE MODAL ────────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="sample-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🎲 Select Benchmark Sample Image</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-grid" id="modal-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── REPORT PRINT VIEW CONTAINER ─────────────────────────── -->
+  <div id="print-container" class="print-container"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

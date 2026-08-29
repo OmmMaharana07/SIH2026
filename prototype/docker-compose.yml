@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  satquery-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: satquery_ai_prototype
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - ../archive/data:/app/data:ro
+    restart: unless-stopped
